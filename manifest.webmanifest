@@ -1,0 +1,17 @@
+{
+  "name": "Диагностика биполярного спектра",
+  "short_name": "БАР DSM-5",
+  "description": "Пошаговый алгоритм DSM-5-TR для специалиста: гипотеза, коды ICD-10-CM и МКБ-11.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDF0F5",
+  "theme_color": "#111725",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
