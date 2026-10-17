@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Пошаговый алгоритм DSM-5-TR для специалиста: дифференциальная диагностика биполярного спектра, коды ICD-10-CM и МКБ-11.">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font: 14px system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Диагностика биполярного спектра</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Одна колонка-мастер. Фирменный элемент: спектр настроения (депрессивный полюс → эутимия → подъём), он же прогресс, номер этапа и диаграмма полюсов в итоге. Плитки-варианты, плавающая навигация снизу. */
+:root {
+  --bg: #EDF0F5;
+  --surface: #FFFFFF;
+  --surface-2: #F4F6FA;
+  --ink: #111725;
+  --muted: #5A6476;
+  --line: #DCE1EA;
+  --btn: #111725;
+  --btn-ink: #FFFFFF;
+  --dep: #3C69E0;
+  --mid: #A7ADBE;
+  --man: #EC7230;
+  --danger: #C6372B;
+  --danger-soft: #FDECEA;
+  --warn: #965600;
+  --warn-soft: #FFF1D8;
+  --info-soft: #EAF0F9;
+  --shadow: 0 1px 2px rgb(17 23 37 / 0.04), 0 10px 30px -12px rgb(17 23 37 / 0.12);
+  --spectrum: linear-gradient(90deg, var(--dep), var(--mid) 50%, var(--man));
+
+  --f-display: "Unbounded", "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Onest", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --r-lg: 22px;
+  --r-md: 14px;
+  --wrap: 760px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B0E14; --surface: #141923; --surface-2: #1B2130; --ink: #E9EDF5; --muted: #98A2B5; --line: #262D3C;
+    --btn: #E9EDF5; --btn-ink: #0B0E14; --dep: #7FA1FF; --mid: #5D6579; --man: #FF9C66;
+    --danger: #FF8B7F; --danger-soft: #3A1916; --warn: #F3BA63; --warn-soft: #33260F; --info-soft: #162031;
+    --shadow: 0 0 0 1px rgb(255 255 255 / 0.03), 0 14px 34px -18px rgb(0 0 0 / 0.7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B0E14; --surface: #141923; --surface-2: #1B2130; --ink: #E9EDF5; --muted: #98A2B5; --line: #262D3C;
+  --btn: #E9EDF5; --btn-ink: #0B0E14; --dep: #7FA1FF; --mid: #5D6579; --man: #FF9C66;
+  --danger: #FF8B7F; --danger-soft: #3A1916; --warn: #F3BA63; --warn-soft: #33260F; --info-soft: #162031;
+  --shadow: 0 0 0 1px rgb(255 255 255 / 0.03), 0 14px 34px -18px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--bg);
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--dep); outline-offset: 2px; }
+
+.wrap {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ===== Шапка ===== */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg);
+}
+.top .wrap { padding-block: 14px 12px; display: flex; flex-direction: column; gap: 12px; }
+.top-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 600; font-size: 0.9rem; letter-spacing: -0.01em; }
+.brand-mark { width: 26px; height: 26px; border-radius: 8px; background: var(--spectrum); flex: none; }
+.brand small { font-family: var(--f-mono); font-size: 0.68rem; color: var(--muted); font-weight: 500; letter-spacing: 0.04em; }
+.step-count { font-size: 0.8rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.steps { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.steps[hidden] { display: none; }
+.seg { border: 0; background: none; padding: 4px 0; cursor: pointer; display: flex; flex-direction: column; gap: 6px; text-align: left; min-width: 0; }
+.seg-bar {
+  height: 5px; border-radius: 3px; background-color: var(--line);
+  background-image: var(--spectrum); background-size: 700% 100%;
+  background-position: calc(var(--i) * 100% / 6) 0;
+  background-repeat: no-repeat;
+  background-blend-mode: normal;
+  opacity: 1;
+  transition: filter .25s, opacity .25s;
+}
+.seg:not(.done):not(.current):not(.missing) .seg-bar { background-image: none; }
+.seg.done .seg-bar { opacity: 0.55; }
+.seg.current .seg-bar { opacity: 1; box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px color-mix(in srgb, var(--ink) 25%, transparent); }
+.seg.missing .seg-bar { background-image: none; background-color: var(--warn); }
+.seg-label { font-size: 0.68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seg.current .seg-label { color: var(--ink); font-weight: 600; }
+
+/* ===== Основная область ===== */
+main .wrap { padding-block: 18px 140px; display: flex; flex-direction: column; gap: 16px; }
+
+.eyebrow { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 0; font-weight: 500; }
+h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(1.45rem, 5vw, 2.1rem); line-height: 1.15; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.lead { color: var(--muted); margin: 0; max-width: 60ch; font-size: 1.02rem; }
+.head { display: flex; flex-direction: column; gap: 10px; padding-block: 6px 4px; }
+
+.stage-num { font-family: var(--f-display); font-weight: 600; font-size: clamp(3rem, 12vw, 4.6rem); line-height: .9; letter-spacing: -0.04em; color: var(--ink); margin: 0; }
+.plan b { color: var(--ink); }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .stage-num, .plan b { background-image: var(--spectrum); background-size: 700% 100%; background-position: calc(var(--i) * 100% / 6) 0; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+}
+
+/* Вопрос */
+.q {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: 14px;
+  border: 1.5px solid transparent;
+  transition: border-color .2s;
+}
+.q[hidden] { display: none; }
+.q.missing { border-color: var(--warn); }
+.q-title { font-weight: 600; font-size: 1.02rem; line-height: 1.4; margin: 0; display: flex; gap: 12px; align-items: baseline; }
+.qnum { font-family: var(--f-mono); font-size: 0.74rem; color: var(--muted); flex: none; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); font-weight: 500; }
+.req { display: inline-block; margin-left: 6px; color: var(--warn); font-weight: 500; font-size: 0.74rem; white-space: nowrap; }
+.note { font-size: 0.88rem; color: var(--muted); margin: 0; }
+.q-err { font-size: 0.85rem; color: var(--warn); margin: 0; font-weight: 500; }
+
+/* Счётчик критерия: мини-шкала с порогом */
+.meter { display: flex; flex-direction: column; gap: 6px; }
+.meter-track { position: relative; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: visible; }
+.meter-fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 3px; background: var(--mid); transition: width .25s, background .25s; }
+.meter.ok .meter-fill { background: var(--accent-c, var(--dep)); }
+.meter-th { position: absolute; top: -4px; bottom: -4px; width: 2px; border-radius: 1px; background: var(--ink); opacity: .55; transform: translateX(-1px); }
+.meter-text { font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter.ok .meter-text { color: var(--ink); font-weight: 600; }
+
+/* Плитки-варианты */
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opt {
+  position: relative;
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .1s;
+}
+.opt:hover { border-color: var(--line); }
+.opt:active { transform: scale(.995); }
+.opt input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--dep); outline-offset: 2px; }
+.opt.on { border-color: var(--ink); background: var(--surface); }
+.ind {
+  flex: none; width: 20px; height: 20px; margin-top: 1px;
+  border: 1.5px solid var(--mid); border-radius: 50%;
+  display: grid; place-items: center;
+  transition: background .15s, border-color .15s;
+}
+.ind::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--btn-ink); transform: scale(0); transition: transform .15s; }
+.opt.check .ind { border-radius: 6px; }
+.opt.check .ind::after { width: 9px; height: 5px; border-radius: 0; background: none; border-left: 2px solid var(--btn-ink); border-bottom: 2px solid var(--btn-ink); transform: rotate(-45deg) scale(0); margin-top: -2px; }
+.opt.on .ind { background: var(--ink); border-color: var(--ink); }
+.opt.on .ind::after { transform: scale(1); }
+.opt.check.on .ind::after { transform: rotate(-45deg) scale(1); }
+.opt-text { min-width: 0; font-size: 0.95rem; line-height: 1.45; }
+.tag {
+  display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; vertical-align: 1px;
+  font-size: 0.72rem; font-weight: 600; white-space: nowrap;
+  background: var(--bg); color: var(--muted); border: 1px solid var(--line);
+}
+
+/* Кнопки */
+.btn {
+  border: 1.5px solid var(--line); background: transparent; color: var(--ink);
+  border-radius: 999px; padding: 11px 20px; font-weight: 600; font-size: 0.95rem; cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+.btn:hover { border-color: var(--ink); }
+.btn:active { transform: scale(.98); }
+.btn.primary { background: var(--btn); border-color: var(--btn); color: var(--btn-ink); }
+.btn.primary:hover { filter: brightness(1.12); }
+.btn.danger { background: var(--danger); border-color: var(--danger); color: #FFFFFF; }
+.btn.ghost { border-color: transparent; padding-inline: 10px; color: var(--muted); }
+.btn.ghost:hover { color: var(--ink); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* Плавающая навигация */
+.nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+.nav[hidden] { display: none; }
+.nav-inner {
+  pointer-events: auto;
+  display: flex; gap: 10px; align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px;
+  box-shadow: var(--shadow);
+}
+.nav .spacer { flex: 1; }
+.nav-msg { font-size: 0.82rem; color: var(--warn); font-weight: 500; min-width: 0; line-height: 1.25; }
+
+/* Старт */
+.hero { display: flex; flex-direction: column; gap: 16px; padding-block: 18px 6px; }
+.hero h1 { font-size: clamp(1.9rem, 7vw, 3.1rem); line-height: 1.05; letter-spacing: -0.035em; }
+.spectrum-band { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.spectrum-bar { height: 12px; border-radius: 6px; background: var(--spectrum); }
+.spectrum-labels { display: flex; justify-content: space-between; gap: 8px; font-size: 0.74rem; color: var(--muted); }
+.spectrum-labels span:nth-child(2) { text-align: center; }
+.spectrum-labels span:last-child { text-align: right; }
+
+.panel { background: var(--surface); border-radius: var(--r-lg); padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px; }
+.label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 0; font-weight: 500; }
+.meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem; color: var(--muted); min-width: 0; }
+.field input {
+  font: inherit; font-size: 1rem; color: var(--ink);
+  background: var(--surface-2); border: 1.5px solid transparent; border-radius: 12px; padding: 11px 13px; min-width: 0;
+  transition: border-color .15s;
+}
+.field input:focus { outline: none; border-color: var(--ink); }
+.plan { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.plan li { display: flex; gap: 12px; align-items: center; font-size: 0.92rem; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.plan b { font-family: var(--f-display); font-size: 1rem; font-weight: 600; flex: none; width: 1.6em; }
+.draft-box { background: var(--surface); border-radius: var(--r-lg); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); border: 1.5px solid var(--dep); }
+.draft-box p { margin: 0; font-size: 0.94rem; }
+
+/* Итог */
+.dx-card {
+  position: relative; overflow: hidden;
+  background: var(--surface); border-radius: var(--r-lg); padding: 22px 20px 20px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.dx-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--spectrum); }
+.dx { font-family: var(--f-display); font-weight: 600; font-size: clamp(1.2rem, 4.4vw, 1.55rem); line-height: 1.22; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 12px; border-radius: 10px; background: var(--surface-2); font-family: var(--f-mono); font-size: 0.9rem; min-width: 0; overflow-wrap: anywhere; }
+.chip small { font-family: var(--f-body); font-size: 0.72rem; color: var(--muted); }
+
+.card { background: var(--surface); border-radius: var(--r-lg); padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px; }
+.card ul { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 7px; }
+.card li { font-size: 0.95rem; }
+.card li::marker { color: var(--mid); }
+.result-meta { font-size: 0.86rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0; }
+
+.poles { display: flex; flex-direction: column; gap: 18px; }
+.pole { display: flex; flex-direction: column; gap: 8px; }
+.pole-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.pole-name { font-weight: 600; }
+.pole-status { font-size: 0.82rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.pole-status.on { color: var(--btn-ink); background: var(--pc); }
+.pole-track { position: relative; height: 10px; border-radius: 5px; background: var(--surface-2); }
+.pole-fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 5px; background: var(--pc); }
+.pole-th { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--ink); opacity: .6; transform: translateX(-1px); border-radius: 1px; }
+.pole-scale { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pole.dep { --pc: var(--dep); }
+.pole.man { --pc: var(--man); }
+
+.alert { border-radius: var(--r-md); padding: 14px 16px; font-size: 0.94rem; }
+.alert b { display: block; margin-bottom: 3px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.alert.danger { background: var(--danger-soft); box-shadow: inset 4px 0 0 var(--danger); }
+.alert.danger b { color: var(--danger); }
+.alert.warn { background: var(--warn-soft); }
+.alert.warn b { color: var(--warn); }
+.alert.info { background: var(--info-soft); font-size: 0.88rem; }
+.alert.info b { color: var(--muted); }
+.alerts { display: flex; flex-direction: column; gap: 8px; }
+.sample-banner { background: var(--warn-soft); border-radius: var(--r-md); padding: 12px 16px; font-size: 0.9rem; margin: 0; }
+.disclaimer { font-size: 0.84rem; color: var(--muted); margin: 0; max-width: 70ch; }
+.confirm { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--danger-soft); border-radius: var(--r-md); padding: 12px 14px; }
+.confirm p { margin: 0; font-weight: 500; flex: 1 1 200px; }
+.copy-fallback { width: 100%; min-height: 220px; font-family: var(--f-mono); font-size: 0.82rem; background: var(--surface-2); color: var(--ink); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px; }
+.toast { font-size: 0.88rem; font-weight: 600; color: var(--ink); }
+.actions { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 4; }
+.actions .bar { display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px; box-shadow: var(--shadow); }
+.actions .bar .btn.primary { flex: 1; }
+
+@media (max-width: 640px) {
+  .meta, .plan { grid-template-columns: 1fr; }
+  .seg-label { display: none; }
+  .steps { gap: 4px; }
+  .q, .panel, .card { padding: 16px; }
+  .opt { padding: 13px 14px; }
+  .nav-inner .btn { padding-inline: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <span class="brand"><span class="brand-mark" aria-hidden="true"></span><span>Биполярный спектр <small>DSM-5-TR</small></span></span>
+      <span class="step-count" id="step_count"></span>
+    </div>
+    <nav class="steps" id="steps" aria-label="Этапы" hidden></nav>
+  </div>
+</header>
+
+<main id="app"><div class="wrap" id="view"></div></main>
+
+<div class="nav" id="nav" hidden>
+  <div class="wrap">
+    <div class="nav-inner">
+      <button class="btn" id="btn_back" type="button">Назад</button>
+      <span class="nav-msg" id="nav_msg"></span>
+      <span class="spacer"></span>
+      <button class="btn primary" id="btn_next" type="button">Далее</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================= Логика диагностики (проверена на тестовых сценариях) =================
+const B_SYMPTOMS = ['symptom_grandiosity', 'symptom_sleep', 'symptom_talkative', 'symptom_flight', 'symptom_distract', 'symptom_activity', 'symptom_risk'];
+const DEP_SYMPTOMS = ['dep_mood', 'dep_anhedonia', 'dep_weight', 'dep_sleep', 'dep_psychomotor', 'dep_fatigue', 'dep_guilt', 'dep_cognition', 'dep_suicidal'];
+const ANX_SYMPTOMS = ['anxiety_tense', 'anxiety_worry', 'anxiety_concentration', 'anxiety_fear', 'anxiety_control'];
+const RISK_FACTORS = ['risk_family', 'risk_early', 'risk_recurrent', 'risk_antidep'];
+
+function bipolarICode(cur, sev, psy) {
+  if (cur === 'manic') {
+    if (sev === 'partial') return 'F31.73';
+    if (sev === 'full') return 'F31.74';
+    if (psy) return 'F31.2';
+    return { mild: 'F31.11', moderate: 'F31.12', severe: 'F31.13' }[sev] || 'F31.9';
+  }
+  if (cur === 'hypomanic') {
+    if (sev === 'partial') return 'F31.71';
+    if (sev === 'full') return 'F31.72';
+    return 'F31.0';
+  }
+  if (cur === 'depressive') {
+    if (sev === 'partial') return 'F31.75';
+    if (sev === 'full') return 'F31.76';
+    if (psy) return 'F31.5';
+    return { mild: 'F31.31', moderate: 'F31.32', severe: 'F31.4' }[sev] || 'F31.9';
+  }
+  return 'F31.9';
+}
+
+function mddCode(episodes, sev, psy) {
+  const rec = episodes === 'recurrent';
+  const p = rec ? 'F33' : 'F32';
+  if (sev === 'partial') return rec ? 'F33.41' : 'F32.4';
+  if (sev === 'full') return rec ? 'F33.42' : 'F32.5';
+  if (psy) return p + '.3';
+  return { mild: p + '.0', moderate: p + '.1', severe: p + '.2' }[sev] || p + '.9';
+}
+
+function diagnose(get) {
+  const on = name => get(name) === 'on';
+  const count = names => names.filter(on).length;
+  const res = { diagnosis: '', codes: '', details: [], warnings: [], specifiers: [], alerts: [], poles: null };
+
+  const substance = get('substance');
+  const somatic = get('somatic');
+  const psychotic = get('psychotic');
+  const elevType = get('elevation_type');
+  const elevDur = get('elevation_duration') || 'none';
+  const depDur = get('depression_duration');
+  const riskNow = get('risk_now');
+  const cur = get('current_episode');
+  const sev = get('severity');
+  const curPsy = get('current_psychotic') === 'yes';
+  const depEpisodes = get('dep_episodes');
+
+  const missing = [];
+  if (!substance) missing.push('1.1');
+  if (!somatic) missing.push('1.2');
+  if (!psychotic) missing.push('1.3');
+  if (!elevType) missing.push('2.1');
+  if (elevType && elevType !== 'none' && !get('elevation_duration')) missing.push('2.2');
+  if (!depDur) missing.push('3.1');
+  if (missing.length) {
+    res.diagnosis = 'Не хватает обязательных ответов';
+    res.warnings.push(`Заполните пункты: ${missing.join(', ')}. Без них алгоритм не может пройти этапы 1–3.`);
+    return res;
+  }
+
+  if (riskNow === 'yes') {
+    res.alerts.push('Актуальная суицидальность. До любых диагностических выводов нужна оценка риска (намерение, план, доступ к средствам, прошлые попытки) и план безопасности. При непосредственной угрозе вызывайте экстренную помощь (112).');
+  } else if (on('dep_suicidal') && riskNow !== 'no') {
+    res.alerts.push('В депрессивном эпизоде отмечалась суицидальность, а текущий риск не оценён (пункт 3.4). Оцените его до завершения приёма.');
+  } else if (on('dep_suicidal')) {
+    res.warnings.push('В депрессивном эпизоде отмечалась суицидальность. Текущий риск оценён как отсутствующий; переоценивайте его при каждом контакте.');
+  }
+
+  if (substance === 'only') {
+    res.diagnosis = 'Биполярное или депрессивное расстройство, индуцированное веществом/медикаментом';
+    res.codes = 'Код подбирается по конкретному веществу (DSM-5-TR / МКБ-11)';
+    res.details.push('Симптомы возникли исключительно во время интоксикации/абстиненции или курса препарата и полностью прошли после отмены.');
+    res.warnings.push('Первичное биполярное расстройство на этих данных не подтверждается. Нужно наблюдение после полной отмены вещества.');
+    return res;
+  }
+  if (somatic === 'medical') {
+    res.diagnosis = 'Биполярное (или депрессивное) расстройство вследствие другого медицинского состояния';
+    res.codes = 'DSM-5-TR: F06.3x · МКБ-11: 6E62';
+    res.details.push('Нарушения настроения являются прямым патофизиологическим следствием подтверждённого медицинского состояния.');
+    res.warnings.push('В приоритете лечение основного заболевания; психиатрическое лечение симптоматическое.');
+    return res;
+  }
+  if (somatic === 'delirium') {
+    res.diagnosis = 'Делирий с аффективными нарушениями';
+    res.codes = 'DSM-5-TR: F05 · МКБ-11: 6D70';
+    res.details.push('Симптомы развиваются только на фоне делирия (помрачение сознания, дезориентация).');
+    res.warnings.push('Диагноз аффективного расстройства во время делирия не ставится. Требуется неотложная медицинская помощь.');
+    return res;
+  }
+  if (psychotic === 'outside') {
+    res.diagnosis = 'Шизоаффективное расстройство (биполярный тип) или расстройство шизофренического спектра';
+    res.codes = 'DSM-5-TR: F25.0 / F20.9 · МКБ-11: 6A21 / 6A20';
+    res.details.push('Бред или галлюцинации сохранялись ≥2 недель вне выраженного аффективного эпизода.');
+    res.warnings.push('Для разграничения нужна оценка доли аффективных эпизодов во всей длительности болезни. Требуется углублённая диагностика.');
+    return res;
+  }
+
+  if (substance === 'partial') {
+    res.warnings.push('На фоне антидепрессантов были 1–2 симптома без полного синдрома: это не засчитывается как эпизод мании/гипомании, но остаётся маркером настороженности.');
+  }
+  if (substance === 'antidepressant') {
+    if (elevType === 'none') {
+      res.warnings.push('В 1.1 указан эпизод подъёма на фоне антидепрессантов, а в 2.1 отмечено, что подъёмов не было. Ответы противоречат друг другу.');
+    } else {
+      res.details.push('Полноценный эпизод подъёма на фоне антидепрессантов, сохранявшийся после окончания их эффекта, засчитывается как эпизод в рамках БАР.');
+    }
+  }
+
+  const bCount = count(B_SYMPTOMS);
+  const noticeable = on('impact_noticeable');
+  const impairment = on('impact_impairment');
+  const hosp = on('impact_hospitalization');
+  const psyElev = on('impact_psychosis');
+  const severeImpact = impairment || hosp || psyElev;
+
+  if (on('impact_none') && (noticeable || severeImpact)) {
+    res.warnings.push('В 2.4 одновременно отмечено «изменения не были заметны» и признаки влияния. Учтены признаки влияния, проверьте ответ.');
+  }
+
+  let episode = 'none';
+  if (elevType !== 'none') {
+    const need = elevType === 'irritable' ? 4 : 3;
+    const longEnough = elevDur === '4-6' || elevDur === '7+';
+    if (bCount < need) {
+      res.warnings.push(`Критерий B не выполнен: отмечено симптомов ${bCount}, нужно ≥${need}${elevType === 'irritable' ? ' (при исключительно раздражительном настроении)' : ''}.`);
+      if (bCount > 0 && elevDur !== 'none') episode = 'subthreshold';
+    } else if (hosp || (elevDur === '7+' && severeImpact)) {
+      episode = 'mania';
+      res.details.push(hosp
+        ? 'Маниакальный эпизод: госпитализация, длительность в этом случае не важна.'
+        : `Маниакальный эпизод: ≥7 дней, ${bCount} симптомов B, выраженная дезадаптация или психотические симптомы.`);
+    } else if (severeImpact) {
+      episode = 'subthreshold';
+      res.warnings.push('Выраженная дезадаптация или психоз при длительности меньше 7 дней и без госпитализации. Для мании не хватает длительности, а гипомания по определению исключает такие последствия (при психозе эпизод всегда маниакальный). Перепроверьте длительность в 2.2.');
+    } else if (longEnough && noticeable) {
+      episode = 'hypomania';
+      res.details.push(`Гипоманиакальный эпизод: ≥4 дней, ${bCount} симптомов B, изменения заметны окружающим, без тяжёлой дезадаптации.`);
+    } else if (longEnough) {
+      episode = 'subthreshold';
+      res.warnings.push('Длительность и симптомы достаточны для гипомании, но не отмечено, что изменения заметны окружающим (критерий D). Эпизод не засчитан.');
+    } else if (elevDur === '2-3') {
+      episode = 'short_hypomania';
+      res.warnings.push('Кратковременная гипомания (2–3 дня): ниже порога гипоманиакального эпизода DSM-5-TR.');
+    } else {
+      res.warnings.push('Подъёмы короче 2 дней эпизода не формируют. Сверьтесь с паттернами ПРЛ и СДВГ (этап 6).');
+    }
+  }
+
+  if (psyElev && psychotic === 'no') {
+    res.warnings.push('В 2.4 отмечены психотические симптомы, а в 1.3 указано, что их не было. Ответы противоречат друг другу.');
+  }
+
+  const depCount = count(DEP_SYMPTOMS);
+  const hasCore = on('dep_mood') || on('dep_anhedonia');
+  let hasMDE = false;
+  if (depDur === 'yes') {
+    if (hasCore && depCount >= 5) {
+      hasMDE = true;
+      res.details.push(`Большой депрессивный эпизод: ≥2 недель, ${depCount} симптомов из 9, включая стержневой.`);
+    } else {
+      res.warnings.push(`Депрессивный период ≥2 недель отмечен, но критерий А БДЭ не выполнен: симптомов ${depCount} (нужно ≥5)${hasCore ? '' : ', нет стержневого симптома'}.`);
+    }
+  }
+
+  res.poles = { episode, elevType, bCount, need: elevType === 'irritable' ? 4 : 3, depDur, depCount, hasCore, hasMDE };
+
+  const cyclo = get('cyclothymia');
+  const curKnown = cur === 'depressive' || cur === 'hypomanic' || cur === 'manic';
+  let dxKind = 'other';
+
+  if (episode === 'mania') {
+    dxKind = 'bp1';
+    const code = bipolarICode(cur, sev, curPsy);
+    res.diagnosis = 'Биполярное аффективное расстройство I типа (БАР I)';
+    res.codes = `DSM-5-TR: ${code} · МКБ-11: 6A60`;
+    res.details.push('Для БАР I достаточно одного маниакального эпизода; депрессивные эпизоды не обязательны.');
+    if (!curKnown) res.warnings.push('Для точного кода F31 укажите тип текущего/последнего эпизода (5.1).');
+    else if (code === 'F31.9') res.warnings.push('Для точного кода F31 укажите тяжесть или статус ремиссии (5.2).');
+  } else if (episode === 'hypomania' && hasMDE) {
+    dxKind = 'bp2';
+    res.diagnosis = 'Биполярное аффективное расстройство II типа (БАР II)';
+    res.codes = 'DSM-5-TR: F31.81 · МКБ-11: 6A61';
+    res.details.push('Есть гипоманиакальный эпизод и БДЭ, маниакальных эпизодов в анамнезе нет. Код F31.81 не зависит от текущего эпизода; тяжесть и ремиссия записываются спецификаторами.');
+  } else if (episode === 'hypomania') {
+    res.diagnosis = 'Другое уточнённое биполярное расстройство: гипоманиакальный эпизод без БДЭ в анамнезе';
+    res.codes = 'DSM-5-TR: F31.89 · МКБ-11: 6A6Y';
+    res.warnings.push('Для БАР II нужен и гипоманиакальный эпизод, и БДЭ. Нужно активно расспросить о депрессивных периодах.');
+  } else if (episode === 'short_hypomania' && hasMDE) {
+    res.diagnosis = 'Другое уточнённое биполярное расстройство: БДЭ + кратковременная гипомания (2–3 дня)';
+    res.codes = 'DSM-5-TR: F31.89 · МКБ-11: 6A6Y';
+  } else if (episode === 'subthreshold' && hasMDE) {
+    res.diagnosis = 'Другое уточнённое биполярное расстройство: БДЭ + гипоманиакальные эпизоды с недостаточным числом симптомов';
+    res.codes = 'DSM-5-TR: F31.89 · МКБ-11: 6A6Y';
+  } else if (!hasMDE && cyclo === 'yes') {
+    res.diagnosis = 'Циклотимическое расстройство';
+    res.codes = 'DSM-5-TR: F34.0 · МКБ-11: 6A62';
+    res.details.push('Многочисленные периоды гипоманиакальных и депрессивных симптомов ≥2 лет (≥1 года у подростков), >50% времени, ровные периоды ≤2 месяцев, критерии мании/гипомании/БДЭ не выполнялись.');
+  } else if (!hasMDE && cyclo === 'partial') {
+    res.diagnosis = 'Другое уточнённое биполярное расстройство: кратковременная циклотимия (<24 месяцев)';
+    res.codes = 'DSM-5-TR: F31.89 · МКБ-11: 6A6Y';
+  } else if (hasMDE) {
+    dxKind = 'mdd';
+    if (cyclo === 'yes' || cyclo === 'partial') {
+      res.warnings.push('При наличии БДЭ циклотимия не ставится (исключение: БДЭ возник после первых 2 лет циклотимии, тогда диагнозы ставятся вместе).');
+    }
+    const course = depEpisodes === 'recurrent' ? 'рекуррентное' : depEpisodes === 'single' ? 'единичный эпизод' : 'единичный эпизод или рекуррентное';
+    res.diagnosis = `Большое депрессивное расстройство, ${course}`;
+    if (depEpisodes) {
+      const code = mddCode(depEpisodes, cur === 'depressive' ? sev : null, cur === 'depressive' && curPsy);
+      res.codes = `DSM-5-TR: ${code} · МКБ-11: ${depEpisodes === 'recurrent' ? '6A71' : '6A70'}`;
+      if (cur !== 'depressive') res.warnings.push('Для точного кода БДР укажите в 5.1 депрессивный эпизод как текущий/последний и его тяжесть в 5.2.');
+      else if (/\.9$/.test(code)) res.warnings.push('Для точного кода БДР укажите тяжесть или статус ремиссии (5.2).');
+    } else {
+      res.codes = 'DSM-5-TR: F32.x / F33.x · МКБ-11: 6A70 / 6A71';
+      res.warnings.push('Укажите число депрессивных эпизодов (3.3), чтобы выбрать между единичным и рекуррентным течением.');
+    }
+    res.details.push('Эпизодов мании/гипомании не зарегистрировано.');
+    const riskCount = count(RISK_FACTORS);
+    if (riskCount >= 2) {
+      res.diagnosis += ', с высокой настороженностью по биполярности';
+      res.warnings.push(`Факторов риска скрытой биполярности: ${riskCount}. Нужно проспективное наблюдение и осторожность с монотерапией антидепрессантами.`);
+    }
+  } else if (episode === 'short_hypomania' || episode === 'subthreshold') {
+    res.diagnosis = 'Субпороговые гипоманиакальные проявления без полного эпизода';
+    res.warnings.push('Ни один полный эпизод не подтверждён. Рассмотрите неуточнённое биполярное расстройство только при клинически значимом дистрессе и продолжайте наблюдение.');
+  } else {
+    res.diagnosis = 'Недостаточно данных для диагноза биполярного спектра';
+    res.warnings.push('Критерии мании, гипомании, БДЭ или циклотимии не выполнены.');
+  }
+
+  const isMoodDx = dxKind !== 'other' || res.codes.indexOf('F31.89') !== -1;
+
+  if (psychotic === 'congruent' || psychotic === 'incongruent') {
+    if (!(episode === 'mania' || hasMDE)) {
+      res.warnings.push('Психотические симптомы отмечены, но ни мании, ни БДЭ не подтверждено. Перепроверьте 1.3, 2.4 и этап 3.');
+    } else if (!curPsy) {
+      res.details.push(`В анамнезе психотические симптомы внутри аффективных эпизодов (${psychotic === 'congruent' ? 'конгруэнтные' : 'неконгруэнтные'} настроению).`);
+    }
+  }
+  if (curPsy && curKnown) {
+    if (psychotic === 'no') res.warnings.push('В 5.2 отмечен психоз в текущем эпизоде, а в 1.3 указано, что психотических симптомов не было. Ответы противоречат друг другу.');
+    if (cur === 'hypomanic') {
+      res.warnings.push('Психотические симптомы несовместимы с гипоманией: при психозе эпизод по определению маниакальный. Проверьте 5.1.');
+    } else {
+      const cong = psychotic === 'congruent' ? ', конгруэнтными настроению' : psychotic === 'incongruent' ? ', неконгруэнтными настроению' : '';
+      res.specifiers.push(`С психотическими симптомами${cong}.`);
+    }
+  }
+
+  if (curKnown) {
+    const names = { depressive: 'депрессивный', hypomanic: 'гипоманиакальный', manic: 'маниакальный' };
+    res.specifiers.push(`Текущий/последний эпизод: ${names[cur]}.`);
+    if (cur === 'manic' && episode !== 'mania') res.warnings.push('Текущий эпизод указан как маниакальный, но критерии мании на этапе 2 не выполнены. Проверьте ответы.');
+    if (cur === 'hypomanic' && dxKind === 'mdd') res.warnings.push('Текущий эпизод указан как гипоманиакальный, но гипомания на этапе 2 не подтверждена. Проверьте ответы.');
+    if (cur === 'depressive' && !hasMDE) res.warnings.push('Текущий эпизод указан как депрессивный, но критерии БДЭ на этапе 3 не выполнены.');
+    if (cur === 'hypomanic' && ['mild', 'moderate', 'severe'].includes(sev)) res.warnings.push('Тяжесть для гипоманиакального эпизода не кодируется. Выбранная степень не учтена в коде.');
+  }
+  if (sev && curKnown) {
+    const names = { mild: 'лёгкая степень', moderate: 'средняя степень', severe: 'тяжёлая степень', partial: 'в неполной ремиссии', full: 'в полной ремиссии' };
+    if (!(cur === 'hypomanic' && ['mild', 'moderate', 'severe'].includes(sev))) res.specifiers.push(`Тяжесть/статус: ${names[sev]}.`);
+  }
+
+  const anxCount = count(ANX_SYMPTOMS);
+  if (anxCount >= 2) {
+    let level = anxCount === 2 ? 'лёгкий' : anxCount === 3 ? 'умеренный' : 'умеренно-тяжёлый';
+    if (anxCount >= 4 && get('anxiety_agitation') === 'yes') level = 'тяжёлый, с двигательным возбуждением';
+    res.specifiers.push(`С тревожным дистрессом (${level}; симптомов: ${anxCount}).`);
+  }
+  if (on('spec_mixed')) res.specifiers.push('Со смешанными чертами.');
+  if (on('spec_rapid')) {
+    if (dxKind === 'bp1' || dxKind === 'bp2') res.specifiers.push('С быстрой цикличностью (≥4 эпизодов за 12 месяцев).');
+    else res.warnings.push('Спецификатор быстрой цикличности применяется только к БАР I и II, здесь не учтён.');
+  }
+  if (on('spec_melancholic') && on('spec_atypical')) res.warnings.push('Меланхолические и атипичные черты взаимоисключающие в рамках одного эпизода. Оставлен только меланхолический.');
+  if (on('spec_melancholic')) {
+    if (hasMDE) res.specifiers.push('С меланхолическими чертами.');
+    else res.warnings.push('Меланхолические черты относятся к депрессивному эпизоду, а БДЭ не подтверждён.');
+  } else if (on('spec_atypical')) {
+    if (hasMDE) res.specifiers.push('С атипичными чертами.');
+    else res.warnings.push('Атипичные черты относятся к депрессивному эпизоду, а БДЭ не подтверждён.');
+  }
+  if (on('spec_catatonia')) res.specifiers.push('С кататонией (доп. код F06.1).');
+  if (on('spec_peripartum')) res.specifiers.push('С началом в перипартальном периоде.');
+  if (on('spec_seasonal')) {
+    if (isMoodDx) res.specifiers.push('С сезонным паттерном.');
+    else res.warnings.push('Сезонный паттерн относится к рекуррентным эпизодам настроения, здесь не учтён.');
+  }
+
+  if (on('diff_bpd')) res.warnings.push('Паттерн ПРЛ: колебания часами, межличностные триггеры, хроническая пустота. Рассмотрите коморбидность или альтернативный диагноз.');
+  if (on('diff_adhd')) res.warnings.push('Паттерн СДВГ: симптомы постоянны с детства, а не фазовые. Рассмотрите коморбидность или альтернативный диагноз.');
+  if (on('diff_grief')) res.warnings.push('Паттерн реакции утраты: подавленность волнами при напоминании, сохранены самооценка и тёплые эмоции. Отграничьте от БДЭ клинически.');
+
+  return res;
+}
+
+// ================= Вопросы =================
+const C = {
+  elev: A => A.elevation_type === 'euphoric' || A.elevation_type === 'irritable',
+  dep: A => A.depression_duration === 'yes',
+  cur: A => ['depressive', 'hypomanic', 'manic'].includes(A.current_episode),
+  anx: A => ANX_SYMPTOMS.some(n => A[n] === 'on')
+};
+const countOn = (A, names) => names.filter(n => A[n] === 'on').length;
+
+const STAGES = [
+  {
+    short: 'Этиология', title: 'Этиологический фильтр',
+    lead: 'Исключаем вторичные, органические и первично-психотические причины. Если одна из них подтверждается, алгоритм остановится здесь.',
+    questions: [
+      { id: '1.1', type: 'radio', name: 'substance', required: true, text: 'Связь с психоактивными веществами или медикаментами',
+        note: 'Учитываются психостимуляторы, кокаин, фенциклидин, стероиды, L-допа, антидепрессанты и др.',
+        options: [
+          { v: 'no', t: 'Симптомы не связаны с приемом ПАВ или лекарств (либо начались до употребления / сохраняются более 1 месяца после полной отмены).' },
+          { v: 'antidepressant', t: 'Полноценный эпизод мании/гипомании развился на фоне приема антидепрессантов (или ЭСТ) и сохранялся на синдромальном уровне после окончания их физиологического эффекта.', tag: 'считается эпизодом' },
+          { v: 'partial', t: 'На фоне приема антидепрессантов возникли только 1–2 симптома (например, только раздражительность или ажитация) без формирования полного синдрома.', tag: 'не считается эпизодом' },
+          { v: 'only', t: 'Симптомы возникли исключительно во время интоксикации/абстиненции ПАВ или курса препаратов (стероиды, стимуляторы и др.) и полностью прошли после их отмены.' }
+        ] },
+      { id: '1.2', type: 'radio', name: 'somatic', required: true, text: 'Соматические, неврологические причины и делирий',
+        options: [
+          { v: 'no', t: 'Нет прямой патофизиологической связи с соматическим заболеванием или делирием.' },
+          { v: 'medical', t: 'Нарушения настроения являются прямым следствием подтвержденного медицинского состояния (гипертиреоз, болезнь Кушинга, рассеянный склероз, инсульт, ЧМТ, анти-NMDA энцефалит).' },
+          { v: 'delirium', t: 'Симптомы развиваются исключительно на фоне делирия (помрачение сознания, дезориентация, острое нарушение внимания).' }
+        ] },
+      { id: '1.3', type: 'radio', name: 'psychotic', required: true, text: 'Психотические симптомы (бред, галлюцинации) за всю историю болезни',
+        options: [
+          { v: 'no', t: 'Бреда и галлюцинаций никогда не наблюдалось.' },
+          { v: 'congruent', t: 'Только внутри эпизода мании или депрессии, содержание конгруэнтно настроению (идеи величия/избранности в мании; идеи вины/греховности/распада в депрессии).' },
+          { v: 'incongruent', t: 'Только внутри эпизода мании или депрессии, содержание неконгруэнтно настроению (бред преследования, вложения мыслей, воздействия, не связанный с величием или виной).' },
+          { v: 'outside', t: 'Бред или галлюцинации сохранялись не менее 2 недель подряд вне выраженного маниакального или депрессивного эпизода.' }
+        ] }
+    ]
+  },
+  {
+    short: 'Подъём', title: 'Полюс подъёма: мания и гипомания',
+    lead: 'Текущий или любой прошлый период повышенного или раздражительного настроения вместе с ростом энергии.',
+    questions: [
+      { id: '2.1', type: 'radio', name: 'elevation_type', required: true, text: 'Критерий A: характер настроения и активности в период подъёма',
+        note: 'Обязательно сочетание изменения настроения с постоянным ростом энергии или двигательной активности.',
+        options: [
+          { v: 'none', t: 'Периодов необычного подъема настроения и энергии никогда не было.' },
+          { v: 'euphoric', t: 'Приподнятое, эйфоричное или экспансивное настроение (возможно, в чередовании с раздражительностью) + повышенная энергия/активность.', tag: 'нужно ≥3 симптомов B' },
+          { v: 'irritable', t: 'Исключительно раздражительное / гневливое настроение (без эйфории) + постоянно повышенная энергия/активность.', tag: 'нужно ≥4 симптомов B' }
+        ] },
+      { id: '2.2', type: 'radio', name: 'elevation_duration', required: true, cond: C.elev, text: 'Максимальная непрерывная длительность периода (почти ежедневно, большую часть дня)',
+        options: [
+          { v: 'none', t: 'Менее 2 дней (например, колебания в течение нескольких часов).' },
+          { v: '2-3', t: 'От 2 до 3 дней подряд (кратковременная гипомания).' },
+          { v: '4-6', t: 'От 4 до 6 дней подряд (порог гипоманиакального эпизода).' },
+          { v: '7+', t: '7 дней и более (порог маниакального эпизода). Если была госпитализация, отметьте её в 2.4: тогда длительность не важна.' }
+        ] },
+      { id: '2.3', type: 'check', cond: C.elev, text: 'Критерий B: симптомы периода подъёма',
+        note: 'Отметьте всё, что явно отличалось от обычного состояния.',
+        meter: A => { const n = countOn(A, B_SYMPTOMS); const need = A.elevation_type === 'irritable' ? 4 : 3; return { n, max: 7, th: need, ok: n >= need, color: 'var(--man)', text: `${n} из 7 · порог ${need}` }; },
+        items: [
+          { name: 'symptom_grandiosity', t: 'Завышенная самооценка или грандиозность: от некритичной уверенности в своих силах и талантах до идей величия.' },
+          { name: 'symptom_sleep', t: 'Снижение потребности во сне: например, ощущение полного отдыха и бодрости после 3 часов сна.' },
+          { name: 'symptom_talkative', t: 'Чрезмерная разговорчивость (речевой напор): ускоренная, громкая речь, невозможность прервать монолог.' },
+          { name: 'symptom_flight', t: '«Полет идей» или скачка мыслей: ощущение, что мысли «бешено несутся», резкие переходы с темы на тему.' },
+          { name: 'symptom_distract', t: 'Повышенная отвлекаемость: внимание мгновенно переключается на малозначимые внешние детали, шумы, предметы.' },
+          { name: 'symptom_activity', t: 'Рост целенаправленной активности или психомоторное возбуждение: множество проектов сразу, гиперсексуальность, ночная активность, неусидчивость.' },
+          { name: 'symptom_risk', t: 'Рискованное поведение с болезненными последствиями: безудержные траты, раздача вещей, сомнительные инвестиции, беспорядочные связи, опасное вождение.' }
+        ] },
+      { id: '2.4', type: 'check', cond: C.elev, text: 'Влияние эпизода подъёма на функционирование',
+        note: 'Отметьте все применимые варианты.',
+        items: [
+          { name: 'impact_none', t: 'Изменения не были заметны окружающим или отсутствовали.' },
+          { name: 'impact_noticeable', t: 'Изменения в поведении были явно заметны окружающим, нехарактерны для человека в норме.' },
+          { name: 'impact_impairment', t: 'Эпизод вызвал выраженные разрушительные последствия в работе/семье/социальной жизни.' },
+          { name: 'impact_hospitalization', t: 'Потребовалась госпитализация (для защиты от вреда себе/другим).' },
+          { name: 'impact_psychosis', t: 'Эпизод сопровождался психотическими симптомами (бред, галлюцинации).' }
+        ] }
+    ]
+  },
+  {
+    short: 'Депрессия', title: 'Депрессивный полюс',
+    lead: 'Текущий или прошлый большой депрессивный эпизод длительностью не менее 2 недель подряд.',
+    questions: [
+      { id: '3.1', type: 'radio', name: 'depression_duration', required: true, text: 'Был ли период сниженного настроения или утраты интересов не менее 14 дней подряд с клинически значимым дистрессом или ухудшением функционирования?',
+        options: [
+          { v: 'no', t: 'Нет (не было периодов по 2 недели либо они не вызывали значимого дистресса).' },
+          { v: 'yes', t: 'Да, ≥ 2 недель подряд, с выраженным дистрессом / нарушениями в жизни.' }
+        ] },
+      { id: '3.2', type: 'check', cond: C.dep, text: 'Критерий A большого депрессивного эпизода',
+        note: 'Отметьте симптомы, присутствовавшие в течение одних и тех же 2 недель.',
+        meter: A => { const n = countOn(A, DEP_SYMPTOMS); const core = A.dep_mood === 'on' || A.dep_anhedonia === 'on'; return { n, max: 9, th: 5, ok: n >= 5 && core, color: 'var(--dep)', text: `${n} из 9 · порог 5, включая стержневой${core ? '' : ' (стержневой не отмечен)'}` }; },
+        items: [
+          { name: 'dep_mood', t: 'Подавленное настроение большую часть дня (грусть, пустота, безнадежность, плаксивость; у подростков раздражительность).', tag: 'стержневой' },
+          { name: 'dep_anhedonia', t: 'Заметное снижение интереса или удовольствия (ангедония) от всех или почти всех видов деятельности.', tag: 'стержневой' },
+          { name: 'dep_weight', t: 'Изменение веса или аппетита: потеря или набор >5% массы тела за месяц без диеты; ежедневное снижение или повышение аппетита.' },
+          { name: 'dep_sleep', t: 'Нарушения сна: ежедневная бессонница или повышенная сонливость (гиперсомния).' },
+          { name: 'dep_psychomotor', t: 'Психомоторные изменения: ажитация или заторможенность почти ежедневно, объективно заметные окружающим.' },
+          { name: 'dep_fatigue', t: 'Усталость или утрата энергии практически ежедневно.' },
+          { name: 'dep_guilt', t: 'Чувство никчемности или чрезмерной вины: неоправданное самообвинение (не просто переживание из-за самой болезни) почти ежедневно.' },
+          { name: 'dep_cognition', t: 'Когнитивное снижение: трудности концентрации, снижение способности думать, нерешительность почти ежедневно.' },
+          { name: 'dep_suicidal', t: 'Суицидальность: повторяющиеся мысли о смерти, суицидальные идеи, план или попытка самоубийства.' }
+        ] },
+      { id: '3.3', type: 'radio', name: 'dep_episodes', cond: C.dep, text: 'Сколько больших депрессивных эпизодов было за всю жизнь?',
+        note: 'Эпизоды считаются отдельными, если между ними было не менее 2 месяцев подряд без полных критериев БДЭ.',
+        options: [
+          { v: 'single', t: 'Один (текущий или единственный в анамнезе)' },
+          { v: 'recurrent', t: 'Два и более' }
+        ] },
+      { id: '3.4', type: 'radio', name: 'risk_now', required: true, text: 'Безопасность: есть ли сейчас мысли о смерти, суицидальные намерения или план?',
+        note: 'Заполняется всегда, независимо от ответов выше.',
+        options: [
+          { v: 'no', t: 'Нет (риск оценён)' },
+          { v: 'yes', t: 'Да' },
+          { v: 'unknown', t: 'Не оценивалось' }
+        ] }
+    ]
+  },
+  {
+    short: 'Циклотимия', title: 'Хроническое субпороговое течение',
+    lead: 'Частые перепады настроения, которые не достигают полных критериев мании, гипомании или БДЭ.',
+    questions: [
+      { id: '4.1', type: 'radio', name: 'cyclothymia', text: 'Есть ли многочисленные периоды лёгкого подъёма и спада, вызывающие дистресс?',
+        options: [
+          { v: 'no', t: 'Нет / симптомы полностью укладываются в очерченные эпизоды выше.' },
+          { v: 'yes', t: 'Да, ≥ 2 лет (≥ 1 года у подростков): симптомы более 50% времени, периоды ровного настроения не дольше 2 месяцев подряд.' },
+          { v: 'partial', t: 'Да, но менее 24 месяцев (симптомы большинство дней, перерывы ≤ 2 месяцев).' }
+        ] }
+    ]
+  },
+  {
+    short: 'Спецификаторы', title: 'Спецификаторы течения и статуса',
+    lead: 'От этих ответов зависит точный код и формулировка диагноза.',
+    questions: [
+      { id: '5.1', type: 'radio', name: 'current_episode', text: 'Текущий (или последний) эпизод',
+        options: [
+          { v: 'depressive', t: 'Депрессивный' },
+          { v: 'hypomanic', t: 'Гипоманиакальный' },
+          { v: 'manic', t: 'Маниакальный' },
+          { v: 'none', t: 'Не определить / нет данных' }
+        ] },
+      { id: '5.2', type: 'radio', name: 'severity', cond: C.cur, text: 'Тяжесть текущего эпизода или статус ремиссии',
+        note: 'Для гипоманиакального эпизода тяжесть не кодируется: выберите статус ремиссии или оставьте пустым.',
+        options: [
+          { v: 'mild', t: 'Лёгкая степень' },
+          { v: 'moderate', t: 'Средняя (умеренная) степень' },
+          { v: 'severe', t: 'Тяжёлая степень' },
+          { v: 'partial', t: 'Неполная ремиссия (есть остаточные симптомы или прошло <2 мес.)' },
+          { v: 'full', t: 'Полная ремиссия (нет значимых симптомов ≥2 мес.)' }
+        ] },
+      { id: '5.2б', type: 'radio', name: 'current_psychotic', cond: C.cur, text: 'Есть ли психотические симптомы в текущем (последнем) эпизоде?',
+        options: [ { v: 'no', t: 'Нет' }, { v: 'yes', t: 'Да' } ] },
+      { id: '5.3', type: 'check', text: 'Тревожный дистресс (в большинство дней эпизода)',
+        meter: A => { const n = countOn(A, ANX_SYMPTOMS); return { n, max: 5, th: 2, ok: n >= 2, color: 'var(--ink)', text: n >= 2 ? `${n} из 5 · спецификатор применяется` : `${n} из 5 · спецификатор с 2` }; },
+        items: [
+          { name: 'anxiety_tense', t: 'Ощущение взвинченности или внутреннего напряжения' },
+          { name: 'anxiety_worry', t: 'Необычное беспокойство, неусидчивость' },
+          { name: 'anxiety_concentration', t: 'Трудности концентрации внимания из-за тревоги' },
+          { name: 'anxiety_fear', t: 'Страх, что может произойти что-то ужасное' },
+          { name: 'anxiety_control', t: 'Страх потерять контроль над собой' }
+        ] },
+      { id: '5.3б', type: 'radio', name: 'anxiety_agitation', cond: C.anx, text: 'Сопровождается ли тревога выраженным двигательным возбуждением?',
+        options: [ { v: 'no', t: 'Нет' }, { v: 'yes', t: 'Да' } ] },
+      { id: '5.4', type: 'check', text: 'Дополнительные клинические спецификаторы',
+        items: [
+          { name: 'spec_mixed', t: 'Со смешанными чертами: ≥3 симптомов противоположного полюса большинство дней текущего/последнего эпизода.' },
+          { name: 'spec_rapid', t: 'С быстрой цикличностью: ≥4 эпизодов настроения за последние 12 месяцев.', tag: 'только БАР I/II' },
+          { name: 'spec_melancholic', t: 'С меланхолическими чертами: утрата удовольствия почти от всего или отсутствие реакции на приятное + ≥3 признаков (особое качество тоски, утреннее ухудшение, ранние пробуждения, заторможенность/ажитация, потеря веса/аппетита, чрезмерная вина).' },
+          { name: 'spec_atypical', t: 'С атипичными чертами: сохранена реактивность на приятные события + ≥2 признаков (повышенный аппетит/вес, гиперсомния, «свинцовый паралич», чувствительность к отвержению).' },
+          { name: 'spec_catatonia', t: 'С кататонией: ступор, мутизм, негативизм, каталепсия.', tag: 'доп. код F06.1' },
+          { name: 'spec_peripartum', t: 'С началом в перипартальном периоде: во время беременности или в течение 4 недель после родов.' },
+          { name: 'spec_seasonal', t: 'С сезонным паттерном: регулярная связь начала и ремиссии эпизодов одного полюса с временем года ≥2 лет, без внесезонных эпизодов.' }
+        ] }
+    ]
+  },
+  {
+    short: 'Дифдиагноз', title: 'Дифференциальный диагноз и скрытая биполярность',
+    lead: 'Отграничение от ПРЛ, СДВГ и реакции утраты, проверка предикторов биполярности при депрессии.',
+    questions: [
+      { id: '6.1', type: 'check', cond: C.dep, text: 'Факторы настороженности в пользу скрытого БАР',
+        note: 'Учитываются, если по итогам этапов 2–3 есть только депрессия.',
+        items: [
+          { name: 'risk_family', t: 'Семейная отягощенность биполярным расстройством у родственников первой линии' },
+          { name: 'risk_early', t: 'Ранний дебют первого депрессивного эпизода (до 20–25 лет)' },
+          { name: 'risk_recurrent', t: 'Частые рецидивы (>3 эпизодов депрессии в анамнезе) или короткие эпизоды (<3 мес.)' },
+          { name: 'risk_antidep', t: 'Нет ответа на антидепрессанты или взвинченность/дисфория на фоне их приема' }
+        ] },
+      { id: '6.2', type: 'check', text: 'Паттерны смежных расстройств',
+        items: [
+          { name: 'diff_bpd', t: 'ПРЛ: колебания длятся часы, а не дни, обычно запускаются межличностными триггерами (обида, страх отвержения), с хронической пустотой и нестабильной идентичностью.' },
+          { name: 'diff_adhd', t: 'СДВГ: отвлекаемость, двигательное беспокойство и разговорчивость постоянно с детства (до 12 лет), а не отдельными фазами.' },
+          { name: 'diff_grief', t: 'Реакция утраты: подавленность после недавней тяжёлой потери, «волнами» при напоминании, при сохранной самооценке и способности к тёплым эмоциям и юмору.' }
+        ] }
+    ]
+  }
+];
+
+const SAMPLE = {
+  substance: 'no', somatic: 'no', psychotic: 'no',
+  elevation_type: 'euphoric', elevation_duration: '4-6',
+  symptom_grandiosity: 'on', symptom_sleep: 'on', symptom_talkative: 'on', symptom_activity: 'on', impact_noticeable: 'on',
+  depression_duration: 'yes', dep_mood: 'on', dep_anhedonia: 'on', dep_sleep: 'on', dep_fatigue: 'on', dep_guilt: 'on', dep_cognition: 'on',
+  dep_episodes: 'recurrent', risk_now: 'no', cyclothymia: 'no',
+  current_episode: 'depressive', severity: 'moderate', current_psychotic: 'no',
+  anxiety_tense: 'on', anxiety_worry: 'on', anxiety_agitation: 'no', risk_family: 'on'
+};
+
+// ================= Состояние =================
+const DRAFT_KEY = 'bipolar-app-draft-v1';
+const DOCTOR_KEY = 'bipolar-app-doctor';
+const LAST = STAGES.length + 1;
+
+const S = { step: 0, A: {}, meta: { patient: '', date: '', doctor: '' }, sample: false, visited: new Set(), confirmReset: false, copied: '' };
+
+const NAME_TO_Q = {};
+STAGES.forEach(st => st.questions.forEach(q => {
+  (q.type === 'radio' ? [q.name] : q.items.map(i => i.name)).forEach(n => { NAME_TO_Q[n] = q; });
+}));
+
+const qDomId = q => 'q-' + q.id.replace(/\W/g, '_');
+const visibleQ = q => !q.cond || q.cond(S.A);
+const getAnswer = name => { const q = NAME_TO_Q[name]; return q && visibleQ(q) && S.A[name] != null ? S.A[name] : null; };
+const missingIn = idx => STAGES[idx].questions.filter(q => q.required && visibleQ(q) && !S.A[q.name]);
+
+function todayIso() {
+  const d = new Date(); const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function fmtDate(iso) { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+function saveDraft() {
+  if (S.sample) return;
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ A: S.A, step: S.step, visited: [...S.visited] })); } catch (e) {}
+}
+function readDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    return d && d.A && Object.keys(d.A).length ? d : null;
+  } catch (e) { return null; }
+}
+function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+
+// ================= Отрисовка =================
+const $view = document.getElementById('view');
+const $steps = document.getElementById('steps');
+const $nav = document.getElementById('nav');
+const $count = document.getElementById('step_count');
+const $msg = document.getElementById('nav_msg');
+const $next = document.getElementById('btn_next');
+const $back = document.getElementById('btn_back');
+
+function renderSteps() {
+  const onWizard = S.step > 0;
+  $steps.hidden = !onWizard;
+  if (!onWizard) { $count.textContent = 'для специалиста'; return; }
+  $count.textContent = S.step === LAST ? 'Заключение' : `Этап ${S.step} из ${STAGES.length}`;
+  const labels = STAGES.map(s => s.short).concat('Итог');
+  $steps.innerHTML = labels.map((l, i) => {
+    const n = i + 1;
+    const cls = ['seg'];
+    if (n === S.step) cls.push('current');
+    else if (n <= STAGES.length && S.visited.has(n)) cls.push(missingIn(i).length ? 'missing' : 'done');
+    else if (n === LAST && S.step === LAST) cls.push('current');
+    return `<button type="button" class="${cls.join(' ')}" style="--i:${i}" data-go="${n}" ${n === S.step ? 'aria-current="step"' : ''} aria-label="${n <= STAGES.length ? 'Этап ' + n + ': ' : ''}${l}"><span class="seg-bar"></span><span class="seg-label">${l}</span></button>`;
+  }).join('');
+}
+
+function optHtml(type, name, id, value, text, tag, checked) {
+  return `<label class="opt${type === 'checkbox' ? ' check' : ''}${checked ? ' on' : ''}"><input type="${type}" name="${name}" id="${id}"${value != null ? ` value="${value}"` : ''}${checked ? ' checked' : ''}><span class="ind" aria-hidden="true"></span><span class="opt-text">${text}${tag ? `<span class="tag">${tag}</span>` : ''}</span></label>`;
+}
+
+function questionHtml(q) {
+  const qid = qDomId(q);
+  const opts = q.type === 'radio'
+    ? q.options.map(o => optHtml('radio', q.name, `${q.name}__${o.v}`, o.v, o.t, o.tag, S.A[q.name] === o.v)).join('')
+    : q.items.map(i => optHtml('checkbox', i.name, i.name, null, i.t, i.tag, S.A[i.name] === 'on')).join('');
+  return `<section class="q" id="${qid}" data-qid="${q.id}" role="group" aria-labelledby="${qid}-t">
+    <p class="q-title" id="${qid}-t"><span class="qnum">${q.id}</span><span>${q.text}${q.required ? '<span class="req">обязательно</span>' : ''}</span></p>
+    ${q.note ? `<p class="note">${q.note}</p>` : ''}
+    ${q.meter ? '<div class="meter"><div class="meter-track"><div class="meter-fill"></div><i class="meter-th"></i></div><span class="meter-text"></span></div>' : ''}
+    <div class="opts">${opts}</div>
+    <p class="q-err" hidden>Выберите один из вариантов.</p>
+  </section>`;
+}
+
+function refreshStage() {
+  const st = STAGES[S.step - 1];
+  if (!st) return;
+  st.questions.forEach(q => {
+    const el = document.getElementById(qDomId(q));
+    if (!el) return;
+    el.hidden = !visibleQ(q);
+    if (q.meter) {
+      const m = q.meter(S.A);
+      const box = el.querySelector('.meter');
+      box.classList.toggle('ok', m.ok);
+      box.style.setProperty('--accent-c', m.color);
+      box.querySelector('.meter-fill').style.width = (m.n / m.max * 100) + '%';
+      box.querySelector('.meter-th').style.left = (m.th / m.max * 100) + '%';
+      box.querySelector('.meter-text').textContent = m.text;
+    }
+    if (q.required && S.A[q.name]) {
+      el.classList.remove('missing');
+      el.querySelector('.q-err').hidden = true;
+    }
+  });
+  if (!missingIn(S.step - 1).length) $msg.textContent = '';
+}
+
+function renderStart() {
+  const draft = readDraft();
+  const plan = STAGES.map((s, i) => `<li style="--i:${i}"><b>${String(i + 1).padStart(2, '0')}</b><span>${s.title}</span></li>`).join('');
+  $view.innerHTML = `
+    <div class="hero">
+      <p class="eyebrow">Алгоритм DSM-5-TR · коды ICD-10-CM и МКБ-11</p>
+      <h1>Диагностика биполярного спектра</h1>
+      <p class="lead">Шесть этапов, до 20 вопросов: часть появляется только по ответам. На выходе рабочая гипотеза, код и спецификаторы, готовые для медкарты.</p>
+      <div class="spectrum-band" aria-hidden="true">
+        <div class="spectrum-bar"></div>
+        <div class="spectrum-labels"><span>Депрессивный полюс</span><span>Эутимия</span><span>Полюс подъёма</span></div>
+      </div>
+    </div>
+    ${draft ? `<div class="draft-box"><p><b>Есть незавершённый черновик</b>, этап ${Math.min(draft.step || 1, STAGES.length)}. Ответы хранятся только в этом браузере.</p><div class="row"><button class="btn primary" type="button" data-act="resume">Продолжить черновик</button><button class="btn" type="button" data-act="fresh">Начать с нуля</button></div></div>` : ''}
+    <div class="panel">
+      <p class="label">Приём</p>
+      <div class="meta">
+        <label class="field">Пациент (ID или инициалы)<input type="text" id="meta_patient" autocomplete="off" value="${esc(S.meta.patient)}"></label>
+        <label class="field">Дата оценки<input type="date" id="meta_date" value="${esc(S.meta.date)}"></label>
+        <label class="field">Специалист<input type="text" id="meta_doctor" autocomplete="off" value="${esc(S.meta.doctor)}"></label>
+      </div>
+      <div class="row">
+        ${draft ? '' : '<button class="btn primary" type="button" data-act="start">Начать оценку</button>'}
+        <button class="btn ghost" type="button" data-act="sample">Посмотреть пример заключения</button>
+      </div>
+    </div>
+    <div class="panel">
+      <p class="label">Этапы алгоритма</p>
+      <ol class="plan">${plan}</ol>
+    </div>
+    <p class="disclaimer">Вспомогательный инструмент для специалиста, не заменяет клиническое интервью. ID пациента не сохраняется; черновик ответов хранится только в этом браузере.</p>`;
+}
+
+function renderStage() {
+  const st = STAGES[S.step - 1];
+  $view.innerHTML = `
+    <div class="head">
+      <p class="stage-num" style="--i:${S.step - 1}" aria-hidden="true">${String(S.step).padStart(2, '0')}</p>
+      <p class="eyebrow">Этап ${S.step} из ${STAGES.length}</p>
+      <h1>${st.title}</h1>
+      <p class="lead">${st.lead}</p>
+    </div>
+    ${st.questions.map(questionHtml).join('')}`;
+  refreshStage();
+}
+
+function buildPlainText(res) {
+  const L = ['Заключение по алгоритму DSM-5-TR'];
+  if (S.meta.patient) L.push('Пациент: ' + S.meta.patient);
+  if (S.meta.date) L.push('Дата: ' + fmtDate(S.meta.date));
+  if (S.meta.doctor) L.push('Специалист: ' + S.meta.doctor);
+  L.push('');
+  res.alerts.forEach(a => L.push('ПРИОРИТЕТ: ' + a));
+  if (res.alerts.length) L.push('');
+  L.push('Рабочая гипотеза: ' + res.diagnosis);
+  if (res.codes) L.push('Коды: ' + res.codes);
+  if (res.specifiers.length) { L.push('', 'Спецификаторы:'); res.specifiers.forEach(s => L.push('- ' + s)); }
+  if (res.details.length) { L.push('', 'Обоснование:'); res.details.forEach(s => L.push('- ' + s)); }
+  if (res.warnings.length) { L.push('', 'Требует внимания:'); res.warnings.forEach(s => L.push('- ' + s)); }
+  L.push('', 'Рабочая гипотеза по введённым ответам. Диагноз ставит врач-психиатр по итогам клинического интервью и наблюдения.');
+  return L.join('\n');
+}
+
+function codesHtml(codes) {
+  if (!codes) return '';
+  const parts = codes.split(' · ').map(p => {
+    const i = p.indexOf(': ');
+    return i > -1 ? `<span class="chip"><small>${p.slice(0, i)}</small>${p.slice(i + 2)}</span>` : `<span class="chip"><small>${p}</small></span>`;
+  });
+  return `<div class="chips">${parts.join('')}</div>`;
+}
+
+function polesHtml(p) {
+  if (!p) return '';
+  const elevStatus = {
+    mania: ['Маниакальный эпизод', true], hypomania: ['Гипоманиакальный эпизод', true],
+    short_hypomania: ['Кратковременная гипомания', false], subthreshold: ['Ниже порога', false]
+  }[p.episode] || [p.elevType === 'none' ? 'Подъёмов не было' : 'Эпизод не сформирован', false];
+  const depStatus = p.hasMDE ? ['БДЭ подтверждён', true] : p.depDur === 'yes' ? ['Критерий A не выполнен', false] : ['Эпизодов не было', false];
+  const pct = (n, max) => Math.min(100, n / max * 100).toFixed(1);
+  return `<div class="card">
+    <p class="label">Полюса</p>
+    <div class="poles">
+      <div class="pole dep">
+        <div class="pole-head"><span class="pole-name">Депрессивный</span><span class="pole-status${depStatus[1] ? ' on' : ''}">${depStatus[0]}</span></div>
+        <div class="pole-track"><div class="pole-fill" style="width:${pct(p.depCount, 9)}%"></div><i class="pole-th" style="left:${pct(5, 9)}%"></i></div>
+        <span class="pole-scale">Критерий A: ${p.depCount} из 9 симптомов · порог 5${p.depCount && !p.hasCore ? ' · нет стержневого' : ''}</span>
+      </div>
+      <div class="pole man">
+        <div class="pole-head"><span class="pole-name">Подъём</span><span class="pole-status${elevStatus[1] ? ' on' : ''}">${elevStatus[0]}</span></div>
+        <div class="pole-track"><div class="pole-fill" style="width:${pct(p.bCount, 7)}%"></div><i class="pole-th" style="left:${pct(p.need, 7)}%"></i></div>
+        <span class="pole-scale">Критерий B: ${p.bCount} из 7 симптомов · порог ${p.need}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderResult() {
+  const res = diagnose(getAnswer);
+  S.lastText = buildPlainText(res);
+  const meta = [];
+  if (S.meta.patient) meta.push(`<span>Пациент: ${esc(S.meta.patient)}</span>`);
+  if (S.meta.date) meta.push(`<span>Дата: ${esc(fmtDate(S.meta.date))}</span>`);
+  if (S.meta.doctor) meta.push(`<span>Специалист: ${esc(S.meta.doctor)}</span>`);
+  const list = arr => `<ul>${arr.map(x => `<li>${x}</li>`).join('')}</ul>`;
+
+  $view.innerHTML = `
+    ${S.sample ? '<p class="sample-banner"><b>Пример.</b> Демонстрационный случай, а не данные пациента. Нажмите «Новый пациент», чтобы начать свою оценку.</p>' : ''}
+    <div class="head">
+      <p class="eyebrow">Итог</p>
+      <h1>Заключение</h1>
+      ${meta.length ? `<p class="result-meta">${meta.join('')}</p>` : ''}
+    </div>
+    ${res.alerts.length ? `<div class="alerts">${res.alerts.map(a => `<div class="alert danger" role="alert"><b>Приоритет</b>${a}</div>`).join('')}</div>` : ''}
+    <div class="dx-card">
+      <p class="label">Рабочая диагностическая гипотеза</p>
+      <p class="dx">${res.diagnosis}</p>
+      ${codesHtml(res.codes)}
+    </div>
+    ${polesHtml(res.poles)}
+    ${res.specifiers.length ? `<div class="card"><p class="label">Спецификаторы</p>${list(res.specifiers)}</div>` : ''}
+    ${res.details.length ? `<div class="card"><p class="label">Обоснование</p>${list(res.details)}</div>` : ''}
+    ${res.warnings.length ? `<div class="alerts">${res.warnings.map(w => `<div class="alert warn"><b>Требует внимания</b>${w}</div>`).join('')}</div>` : ''}
+    <div class="alert info"><b>Справочно по МКБ-11</b>Для гипомании нет жёсткого порога в 4 дня (формулировка «несколько дней»), мания длится не менее недели или короче при прерывании лечением. В депрессивном эпизоде 10 симптомов (добавлена безнадёжность). Пограничные по длительности случаи перепроверяйте по МКБ-11 отдельно.</div>
+    <div id="copy_slot"></div>
+    ${S.confirmReset ? `<div class="confirm"><p>Сбросить все ответы и черновик?</p><button class="btn danger" type="button" data-act="reset">Сбросить</button><button class="btn" type="button" data-act="cancel-reset">Отмена</button></div>` : '<div class="row"><button class="btn" type="button" data-act="ask-reset">Новый пациент</button></div>'}
+    <p class="disclaimer">Результат построен только на введённых ответах и является рабочей гипотезой для специалиста. Диагноз ставит врач-психиатр по итогам клинического интервью, анамнеза (в том числе со слов близких) и наблюдения в динамике.</p>
+    <div class="actions">
+      <div class="bar">
+        <button class="btn primary" type="button" data-act="copy" id="btn_copy" aria-live="polite">${S.copied || 'Скопировать заключение'}</button>
+        <button class="btn" type="button" data-act="edit">Изменить</button>
+      </div>
+    </div>`;
+}
+
+function render() {
+  renderSteps();
+  $nav.hidden = !(S.step >= 1 && S.step <= STAGES.length);
+  $back.textContent = S.step === 1 ? 'К началу' : 'Назад';
+  $next.textContent = S.step === STAGES.length ? 'Получить заключение' : 'Далее';
+  $msg.textContent = '';
+  if (S.step === 0) renderStart();
+  else if (S.step === LAST) renderResult();
+  else renderStage();
+}
+
+function go(step) {
+  if (S.step >= 1 && S.step <= STAGES.length) S.visited.add(S.step);
+  S.step = step;
+  S.confirmReset = false;
+  S.copied = '';
+  if (step >= 1 && step <= STAGES.length) S.visited.add(step);
+  render();
+  saveDraft();
+  window.scrollTo(0, 0);
+}
+
+function showMissing() {
+  const miss = missingIn(S.step - 1);
+  miss.forEach(q => {
+    const el = document.getElementById(qDomId(q));
+    el.classList.add('missing');
+    el.querySelector('.q-err').hidden = false;
+  });
+  if (miss.length) {
+    $msg.textContent = miss.length === 1 ? `Ответьте на ${miss[0].id}` : `Ответьте на ${miss.map(q => q.id).join(', ')}`;
+    document.getElementById(qDomId(miss[0])).scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+  return miss.length === 0;
+}
+
+function resetAll() {
+  S.A = {}; S.sample = false; S.visited = new Set(); S.meta.patient = ''; S.meta.date = todayIso();
+  clearDraft();
+  go(0);
+}
+
+// ================= События =================
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'meta_patient' || t.id === 'meta_date' || t.id === 'meta_doctor') return;
+  if (!t.name) return;
+  if (S.sample) S.sample = false;
+  if (t.type === 'radio') S.A[t.name] = t.value;
+  else if (t.type === 'checkbox') { if (t.checked) S.A[t.name] = 'on'; else delete S.A[t.name]; }
+  document.querySelectorAll('input[name="' + t.name + '"]').forEach(i => { const l = i.closest('.opt'); if (l) l.classList.toggle('on', i.checked); });
+  refreshStage();
+  renderSteps();
+  saveDraft();
+});
+
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'meta_patient') S.meta.patient = t.value;
+  if (t.id === 'meta_date') S.meta.date = t.value;
+  if (t.id === 'meta_doctor') {
+    S.meta.doctor = t.value;
+    try { localStorage.setItem(DOCTOR_KEY, t.value); } catch (err) {}
+  }
+});
+
+document.addEventListener('click', e => {
+  const seg = e.target.closest('[data-go]');
+  if (seg) { go(Number(seg.dataset.go)); return; }
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const act = btn.dataset.act;
+
+  if (act === 'start') { go(1); }
+  else if (act === 'resume') {
+    const d = readDraft();
+    if (d) { S.A = d.A; S.visited = new Set(d.visited || []); go(Math.min(Math.max(d.step || 1, 1), LAST)); }
+  }
+  else if (act === 'fresh') { S.A = {}; S.visited = new Set(); clearDraft(); go(1); }
+  else if (act === 'sample') {
+    S.A = { ...SAMPLE }; S.sample = true; S.visited = new Set([1, 2, 3, 4, 5, 6]);
+    S.meta.patient = 'Пример'; go(LAST);
+  }
+  else if (act === 'edit') { go(1); }
+  else if (act === 'ask-reset') { S.confirmReset = true; renderResult(); }
+  else if (act === 'cancel-reset') { S.confirmReset = false; renderResult(); }
+  else if (act === 'reset') { resetAll(); }
+  else if (act === 'copy') {
+    const text = S.lastText || '';
+    const done = () => { S.copied = 'Скопировано'; const t = document.getElementById('btn_copy'); if (t) t.textContent = S.copied; };
+    const fallback = () => {
+      const slot = document.getElementById('copy_slot');
+      slot.innerHTML = '<p class="note">Браузер не дал доступ к буферу обмена. Текст выделен: скопируйте его вручную.</p><textarea class="copy-fallback" id="copy_text" readonly></textarea>';
+      const ta = document.getElementById('copy_text');
+      ta.value = text; ta.focus(); ta.select();
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
+    } catch (err) { fallback(); }
+  }
+});
+
+$back.addEventListener('click', () => go(S.step - 1));
+$next.addEventListener('click', () => {
+  if (!showMissing()) return;
+  go(S.step + 1);
+});
+
+// ================= Старт =================
+S.meta.date = todayIso();
+try { S.meta.doctor = localStorage.getItem(DOCTOR_KEY) || ''; } catch (e) {}
+render();
+</script>
+</body>
+</html>
