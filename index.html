@@ -317,6 +317,10 @@ h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(1.45rem, 
   .opt { padding: 13px 14px; }
   .nav-inner .btn { padding-inline: 16px; }
 }
+.boot { display: flex; flex-direction: column; gap: 14px; padding-block: 12px; }
+.boot-steps { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px; }
+.boot-steps li, .boot-note { font-size: 0.95rem; margin: 0; }
+.boot b { font-weight: 600; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
@@ -333,7 +337,25 @@ h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(1.45rem, 
   </div>
 </header>
 
-<main id="app"><div class="wrap" id="view"></div></main>
+<main id="app"><div class="wrap" id="view">
+  <div class="boot">
+    <p class="eyebrow">Приложение не запустилось</p>
+    <h1>Откройте файл в браузере</h1>
+    <p class="lead">Файл открыт во встроенном просмотрщике, который не запускает приложения. Откройте его в Chrome или другом браузере, тогда всё заработает, и интернет для этого не нужен.</p>
+    <div class="panel">
+      <p class="label">Android</p>
+      <ol class="boot-steps">
+        <li>В Telegram: нажмите на файл → значок ⋮ → «Открыть с помощью» → <b>Chrome</b>.</li>
+        <li>В «Файлах» или «Загрузках»: удерживайте файл → «Открыть с помощью» → <b>Chrome</b>.</li>
+        <li>Если файл скачан через Chrome: Chrome → ⋮ → «Скачанные файлы» → нажмите на файл.</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <p class="label">iPhone</p>
+      <p class="boot-note">Встроенный просмотр файлов на iPhone не запускает приложения. Откройте версию по ссылке в Safari: <b>yurik8818-dot.github.io/bipolar-dsm5tr</b></p>
+    </div>
+  </div>
+</div></main>
 
 <div class="nav" id="nav" hidden>
   <div class="wrap">
